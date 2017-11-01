@@ -4,8 +4,15 @@
   <script src="./d3.v4.min.js"></script>
   <script src="./dimple.v2.3.0.min.js"></script>
   <script type="text/javascript">
+	function twoDigits(val){
+        val=""+val;
+        if(val.length===1){
+            val="0"+val;
+        }
+        return val.substring(0, 2);
+    }
     function dateToString(date){
-      return date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
+      return date.getFullYear()+"-"+twoDigits(date.getMonth()+1)+"-"+twoDigits(date.getDate());
     }
     var date = new Date();
     date.setDate(date.getDate() + 1);
