@@ -3,7 +3,7 @@
   <script src="./d3.v4.min.js"></script>
   <script src="./dimple.v2.3.0.min.js"></script>
   <script type="text/javascript">
-	function twoDigits(val){
+  function twoDigits(val){
         val=""+val;
         if(val.length===1){
             val="0"+val;
@@ -23,11 +23,11 @@
     d3.json(data_url, function (data) {
       data = data.filter(index => index.value!=="NaN");
       var myChart = new dimple.chart(svg, data);
-      myChart.setBounds(60, 30, 500, 330);
+      myChart.setBounds(60, 30, 500, 280);
       var x = myChart.addCategoryAxis("x", "day");
       x.addOrderRule("day");
       var y = myChart.addMeasureAxis("y", "value");
-	    y.overrideMin = 5.0;
+      y.overrideMin = 5.0;
       var s = myChart.addSeries(null, dimple.plot.line);
       myChart.draw();
     });
