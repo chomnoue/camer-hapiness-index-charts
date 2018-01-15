@@ -1,4 +1,11 @@
 <html>
+<div id="selectContainer">
+	<label>Choisir une période</label>
+	<select id="selectPeriod">
+		<option value="Month" selected>Le mois dernier</option>
+		<option value="Week">La semaine dernière</option>
+	</select>	
+</div>
 <div id="chartContainer">
   <script src="./d3.v4.min.js"></script>
   <script src="./dimple.v2.3.0.min.js"></script>
@@ -13,23 +20,63 @@
     function dateToString(date){
       return date.getFullYear()+"-"+twoDigits(date.getMonth()+1)+"-"+twoDigits(date.getDate());
     }
-    var date = new Date();
-    date.setDate(date.getDate() + 1);
-    var endDate = dateToString(date);
-    date.setDate(date.getDate() - 31);
-    var startDate = dateToString(date);
-    var data_url="https://camer-happiness-index.herokuapp.com/happiness_index_between?start_day="+startDate+"&end_day="+endDate;
-    var svg = dimple.newSvg("#chartContainer", 590, 400);
-    d3.json(data_url, function (data) {
-      data = data.filter(index => index.value!=="NaN");
-      var myChart = new dimple.chart(svg, data);
-      myChart.setBounds(60, 30, 500, 280);
-      var x = myChart.addCategoryAxis("x", "day");
-      x.addOrderRule("day");
-      var y = myChart.addMeasureAxis("y", "value");
-      var s = myChart.addSeries(null, dimple.plot.line);
-      myChart.draw();
+
+    function getDate(daysOffset){
+    	var date = new Date();
+	    date.setDate(date.getDate() + daysOffset);
+	    return dateToString(date);
+    }
+
+	
+    function drawData(period){
+    	d3.select("svg").remove();
+    	var svg = dimple.newSvg("#chartContainer", 590, 400);
+	    var endDate =getDate(1);
+	    var days;
+	    if(period==="Week"){
+	    	days=7;
+	    }else{
+	    	days=31;//default to month
+	    }
+	    var startDate = getDate(-days*2)
+	    var data_url="https://camer-happiness-index.herokuapp.com/happiness_index_between?start_day="+startDate+"&end_day="+endDate;
+	    d3.json(data_url, function (data) {
+	      data = data.filter(d => d.value!=="NaN");
+	      var middleDate=getDate(-days);
+	      var pastData=data.filter(d => d.day<middleDate);
+	      var oldValue=d3.mean(pastData,d => d.value);
+	      data=data.filter(d => d.day>=middleDate);
+	      data=data.map(function(d){
+	      	var status="";
+	      	if(d.value>=oldValue){
+	      		status="Happier";
+	      	}else{
+	      		status="Sadder";
+	      	}
+	      	d.status=status;
+	      	return d;
+	      });
+	      var myChart = new dimple.chart(svg, data);
+	      myChart.setBounds(60, 30, 500, 280);
+	      var x = myChart.addCategoryAxis("x", "day");
+	      x.addOrderRule("day");
+	      var y = myChart.addMeasureAxis("y", "value");
+	      var s = myChart.addSeries(null, dimple.plot.line);
+	      var statusSeries =  myChart.addSeries("status", dimple.plot.bubble);
+	      myChart.assignColor("Happier", "green");
+	      myChart.assignColor("Sadder", "red");
+	      myChart.addLegend(180, 10, 360, 20, "right", statusSeries);
+	      myChart.draw();
+	    });
+    }
+
+    drawData("Month")
+    selectPeriod=d3.select("#selectPeriod");
+    selectPeriod.on("change", function(){
+    	period=selectPeriod.property('value');
+    	drawData(period);
     });
+    
   </script>
 </div>
-</html
+</html>
